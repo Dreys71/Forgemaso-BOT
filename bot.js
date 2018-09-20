@@ -16,14 +16,14 @@ let db = new sqlite3.Database('./db/ladder.db', sqlite3.OPEN_READWRITE, (err) =>
 client.login(auth.token);
 client.on('ready', () => {
     console.log(`Logged in as ${client.user.tag}!`);
-    client.user.setGame("!fm.help")
+    client.user.setActivity('!fm.help', {type: 'WATCHING'})
 });
 
 async function updateUser(user, is_succeed, points){
     return new Promise(resolve => {
         db.get(`SELECT * FROM ladder WHERE user_id = ?`, [user.id], function (err, row) {
             if(err){
-                console.log(err);
+                console.log("err update_user", err);
             } else{
                 // USER EXIST
                 if(row){
@@ -50,7 +50,9 @@ async function updateUser(user, is_succeed, points){
                                 }
                             })
                             db.run('UPDATE best SET max = ? WHERE user_id = ? AND max < ?',[score, user.id, score], function (err) {
-                               console.log(err)
+                                if(err){
+                                    console.log("update best error", err)
+                                }
                             });
                             resolve({state: true, pts: score, row, multiplicator: newMultiplicator})
                         })
@@ -68,7 +70,10 @@ async function updateUser(user, is_succeed, points){
                             }
                             else {
                                 db.run('INSERT INTO best(user_id, max) VALUES(?,0)',[user.id], function (err) {
-                                    console.log(err)
+                                    if(err){
+                                        console.log("insert into", err)
+                                    }
+
                                 })
                                 resolve({state : false, pts: 0, multiplicator: 100});
                             }
@@ -83,7 +88,7 @@ async function updateUser(user, is_succeed, points){
                             }
                             else {
                                 db.run('INSERT INTO best(user_id, max) VALUES(?,?)',[user.id, score], function (err) {
-                                    console.log(err)
+                                    console.log("insert 2 best", err)
                                 })
                                 resolve({state : false, pts: score, multiplicator: newMultiplicator});
                             }
@@ -100,7 +105,7 @@ async function getGuildCurrent(str) {
     return new Promise(resolve => {
         db.all("SELECT * FROM ladder WHERE user_id IN (" + str + ") ORDER BY pts DESC", function (err, row) {
             if(err){
-                console.log(err)
+                console.log("getGuildCurrent", err)
             }
             else {
                 resolve(row)
@@ -111,9 +116,9 @@ async function getGuildCurrent(str) {
 
 async function getGuildAllTime(str) {
     return new Promise(resolve => {
-        db.all("SELECT * FROM ladder, best WHERE ladder.user_id IN (" + str + ") AND ladder.user_id = best.user_id ORDER BY pts DESC", function (err, row) {
+        db.all("SELECT * FROM ladder, best WHERE ladder.user_id IN (" + str + ") AND ladder.user_id = best.user_id ORDER BY max DESC", function (err, row) {
             if(err){
-                console.log(err)
+                console.log("getGuildAllTime",err)
             }
             else {
                 resolve(row)
@@ -126,7 +131,7 @@ async function getGlobalCurrent() {
     return new Promise(resolve => {
         db.all("SELECT * FROM ladder ORDER BY pts DESC LIMIT 100", function (err, row) {
             if(err){
-                console.log(err)
+                console.log("GGC",err)
             }
             else {
                 resolve(row)
@@ -137,9 +142,9 @@ async function getGlobalCurrent() {
 
 async function getGlobalAllTime() {
     return new Promise(resolve => {
-        db.all("SELECT * FROM ladder, best WHERE ladder.user_id = best.user_id ORDER BY pts DESC", function (err, row) {
+        db.all("SELECT * FROM ladder, best WHERE ladder.user_id = best.user_id ORDER BY max DESC", function (err, row) {
             if(err){
-                console.log(err)
+                console.log("GGALT",err)
             }
             else {
                 resolve(row)
@@ -153,9 +158,13 @@ let runesStats = editJsonFile('./runes-stats.json',{
     autosave: true
 })
 
-/*
+
 function stat(rune, state) {
     let s = runesStats.get(rune)
+    console.log("STAT RUN" + rune, s.use)
+    runesStats.set(rune, {"use": s.use + 1})
+    console.log(runesStats.get(rune))
+    /*
     runesStats.set(rune.use, s.use+1)
     if(state===false){
         runesStats.set(rune.fail, s.fail+1)
@@ -163,8 +172,9 @@ function stat(rune, state) {
     else{
         runesStats.set(rune.fail, s.win+1)
     }
+    */
 }
-*/
+
 client.on('message', msg => {
     if (msg.content.substring(0, 1) === '!') {
 
@@ -183,7 +193,7 @@ client.on('message', msg => {
                 }
                 let response = forgemaso.calc(params.win)
                 updateUser(user, response, params.win).then(result => {
-                    /* stat(params.rune, result.state) */
+                     stat(params.rune, result.state)
                     if (result.state === false) {
                         msg.reply(":x: Echec | Votre score est de " + result.pts.toFixed(2) + " | Multiplicateur actuel : " + result.multiplicator + "%");
                     }

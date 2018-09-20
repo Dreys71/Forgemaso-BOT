@@ -1,6 +1,6 @@
 {
   "pa": {
-    "use": 0,
+    "use": 12,
     "fail": 0,
     "win": 0
   },
@@ -10,7 +10,7 @@
     "win": 0
   },
   "po": {
-    "use": 0,
+    "use": 8,
     "fail": 0,
     "win": 0
   },
@@ -20,27 +20,27 @@
     "win": 0
   },
   "do": {
-    "use": 0,
+    "use": 1,
     "fail": 0,
     "win": 0
   },
   "crit": {
-    "use": 0,
+    "use": 22,
     "fail": 0,
     "win": 0
   },
   "res": {
-    "use": 0,
+    "use": 2,
     "fail": 0,
     "win": 0
   },
   "sa": {
-    "use": 0,
+    "use": 8,
     "fail": 0,
     "win": 0
   },
   "fo": {
-    "use": 0,
+    "use": 12,
     "fail": 0,
     "win": 0
   }
