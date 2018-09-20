@@ -103,7 +103,7 @@ async function updateUser(user, is_succeed, points){
 
 async function getGuildCurrent(str) {
     return new Promise(resolve => {
-        db.all("SELECT * FROM ladder WHERE user_id IN (" + str + ") ORDER BY pts DESC", function (err, row) {
+        db.all("SELECT * FROM ladder WHERE user_id IN (" + str + ") ORDER BY pts DESC LIMIT 100", function (err, row) {
             if(err){
                 console.log("getGuildCurrent", err)
             }
@@ -116,7 +116,7 @@ async function getGuildCurrent(str) {
 
 async function getGuildAllTime(str) {
     return new Promise(resolve => {
-        db.all("SELECT * FROM ladder, best WHERE ladder.user_id IN (" + str + ") AND ladder.user_id = best.user_id ORDER BY max DESC", function (err, row) {
+        db.all("SELECT * FROM ladder, best WHERE ladder.user_id IN (" + str + ") AND ladder.user_id = best.user_id ORDER BY max DESC LIMIT 100", function (err, row) {
             if(err){
                 console.log("getGuildAllTime",err)
             }
@@ -142,7 +142,7 @@ async function getGlobalCurrent() {
 
 async function getGlobalAllTime() {
     return new Promise(resolve => {
-        db.all("SELECT * FROM ladder, best WHERE ladder.user_id = best.user_id ORDER BY max DESC", function (err, row) {
+        db.all("SELECT * FROM ladder, best WHERE ladder.user_id = best.user_id ORDER BY max DESC LIMIT 100", function (err, row) {
             if(err){
                 console.log("GGALT",err)
             }
