@@ -1,0 +1,47 @@
+{
+  "pa": {
+    "use": 0,
+    "fail": 0,
+    "win": 0
+  },
+  "pm": {
+    "use": 0,
+    "fail": 0,
+    "win": 0
+  },
+  "po": {
+    "use": 0,
+    "fail": 0,
+    "win": 0
+  },
+  "invo": {
+    "use": 0,
+    "fail": 0,
+    "win": 0
+  },
+  "do": {
+    "use": 0,
+    "fail": 0,
+    "win": 0
+  },
+  "crit": {
+    "use": 0,
+    "fail": 0,
+    "win": 0
+  },
+  "res": {
+    "use": 0,
+    "fail": 0,
+    "win": 0
+  },
+  "sa": {
+    "use": 0,
+    "fail": 0,
+    "win": 0
+  },
+  "fo": {
+    "use": 0,
+    "fail": 0,
+    "win": 0
+  }
+}

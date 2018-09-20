@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <button id="test100">Tester 1/100</button>
+    <table>
+        <thead>
+            <th>Success</th>
+            <th>Fail</th>
+            <th>Itérations</th>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="success100">0</td>
+                <td class="fail100">0</td>
+                <td class="iterate100">0</td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <p style="border-top:2px solid black"></p>
+    <button id="test30">Tester 1/30</button>
+    <table>
+        <thead>
+        <th>Success</th>
+        <th>Fail</th>
+        <th>Itérations</th>
+        </thead>
+        <tbody>
+        <tr>
+            <td class="success30">0</td>
+            <td class="fail30">0</td>
+            <td class="iterate30">0</td>
+        </tr>
+        </tbody>
+    </table>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+<script>
+    let fail30 = 0;
+    let success30 = 0;
+    let iterate30 = 0;
+    $('#test30').click(function (e) {
+        for(i=0;i<1000;i++){
+
+            if(Math.random() * 30 < 1){
+                success30++;
+            }
+            else {
+                fail30++;
+            }
+            iterate30++;
+            $('.success30').text(success30)
+            $('.fail30').text(fail30)
+            $('.iterate30').text(iterate30)
+        }
+    })
+    let fail100 = 0;
+    let success100 = 0;
+    let iterate100 = 0;
+    $('#test100').click(function (e) {
+        for(i=0;i<1000;i++){
+            if(Math.random() * 100 < 1){
+                success100++;
+            }
+            else {
+                fail100++;
+            }
+            iterate100++;
+            $('.success100').text(success100)
+            $('.fail100').text(fail100)
+            $('.iterate100').text(iterate100)
+        }
+    })
+</script>
+</body>
+</html>
