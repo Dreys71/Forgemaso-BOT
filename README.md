@@ -11,10 +11,13 @@ Commands
 <qty> : Optional, default : 1 (min:1, max:100)
 
 --------------------
-
-:!score
-:!ladder
-
+!fm.help
+!fm.stats
+!fm.runes
+!fm.ladder
+!fm.gladder
+!fm.best
+!fm.gbest
 --------------------
 
 Le nombre de point obtenu pour un passage de rune est le logarythme base 2 de la proba :

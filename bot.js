@@ -183,14 +183,12 @@ async function antiSpam(iduser) {
 function stat(rune, state) {
     let s = runesStats.get(rune)
     if(state === false){
-        console.log('fail++')
         runesStats.set(rune, {
             "use": s.use + 1,
             "fail": s.fail + 1
         })
     }
     else {
-        console.log('win++')
         runesStats.set(rune, {
             "use": s.use + 1,
             "win": s.win + 1
@@ -209,7 +207,6 @@ client.on('message', msg => {
         switch (args[0]) {
             case 'fm' :
                 antiSpam(user.id).then(rep => {
-                   console.log("Antispam", rep)
                     if(rep === false){
                         msg.reply("Le spam n'est pas autorisé. Un message toute les 2 secondes.\n10 secondes de santion sont ajoutée.")
                     }
