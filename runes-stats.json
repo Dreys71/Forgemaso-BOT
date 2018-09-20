@@ -1,47 +1,56 @@
 {
   "pa": {
-    "use": 12,
-    "fail": 0,
+    "pts": 100,
+    "use": 233,
+    "fail": 233,
     "win": 0
   },
   "pm": {
-    "use": 0,
-    "fail": 0,
+    "pts": 90,
+    "use": 1,
+    "fail": 1,
     "win": 0
   },
   "po": {
-    "use": 8,
-    "fail": 0,
+    "pts": 51,
+    "use": 1,
+    "fail": 1,
     "win": 0
   },
   "invo": {
+    "pts": 30,
     "use": 0,
     "fail": 0,
     "win": 0
   },
   "do": {
-    "use": 1,
+    "pts": 20,
+    "use": 0,
     "fail": 0,
     "win": 0
   },
   "crit": {
-    "use": 22,
+    "pts": 10,
+    "use": 0,
     "fail": 0,
     "win": 0
   },
   "res": {
-    "use": 2,
-    "fail": 0,
-    "win": 0
+    "pts": 6,
+    "use": 17,
+    "fail": 12,
+    "win": 5
   },
   "sa": {
-    "use": 8,
+    "pts": 3,
+    "use": 0,
     "fail": 0,
     "win": 0
   },
   "fo": {
-    "use": 12,
-    "fail": 0,
-    "win": 0
+    "pts": 2,
+    "use": 57,
+    "fail": 27,
+    "win": 30
   }
 }

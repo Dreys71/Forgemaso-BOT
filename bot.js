@@ -82,7 +82,7 @@ async function updateUser(user, is_succeed, points){
                     // create new user with score = score
                     else {
                         let newMultiplicator = 100 + points
-                        db.run('INSERT INTO ladder(user_id,pseudo, pts, multiplicator) VALUES(?,?,?)', [user.id, user.name, score, newMultiplicator], function (err) {
+                        db.run('INSERT INTO ladder(user_id,pseudo, pts, multiplicator) VALUES(?,?,?)', [user.id, user.name, points, newMultiplicator], function (err) {
                             if(err){
                                 console.log("User don't exist / Lose", err)
                             }
@@ -157,22 +157,46 @@ let runes = editJsonFile('./runes.json')
 let runesStats = editJsonFile('./runes-stats.json',{
     autosave: true
 })
+let antispam = editJsonFile('./antispam.json',{
+    autosave: true
+})
+async function antiSpam(iduser) {
+    return new Promise(resolve => {
+       let spam_user =  antispam.get(iduser)
+        if(spam_user == null){
+            antispam.set(iduser, {entry: Date.now()});
+            resolve(true)
+        }
+        else {
+            if(Date.now() - spam_user.entry < 2000){
+                antispam.set(iduser, {entry: Date.now() + 10000});
+                resolve(false)
+            }
+            else{
+                antispam.set(iduser, {entry: Date.now()});
+                resolve(true)
+            }
+        }
+    })
 
-
+}
 function stat(rune, state) {
     let s = runesStats.get(rune)
-    console.log("STAT RUN" + rune, s.use)
-    runesStats.set(rune, {"use": s.use + 1})
-    console.log(runesStats.get(rune))
-    /*
-    runesStats.set(rune.use, s.use+1)
-    if(state===false){
-        runesStats.set(rune.fail, s.fail+1)
+    if(state === false){
+        console.log('fail++')
+        runesStats.set(rune, {
+            "use": s.use + 1,
+            "fail": s.fail + 1
+        })
     }
-    else{
-        runesStats.set(rune.fail, s.win+1)
+    else {
+        console.log('win++')
+        runesStats.set(rune, {
+            "use": s.use + 1,
+            "win": s.win + 1
+        })
     }
-    */
+
 }
 
 client.on('message', msg => {
@@ -184,25 +208,32 @@ client.on('message', msg => {
 
         switch (args[0]) {
             case 'fm' :
-                /** Looking for rune name param **/
-                if (args[1]) {
-                    let rune = runes.get(args[1])
-                    if (Number.isInteger(rune)) {
-                        params = {rune: args[1], win: rune}
-                    }
-                }
-                let response = forgemaso.calc(params.win)
-                updateUser(user, response, params.win).then(result => {
-                     stat(params.rune, result.state)
-                    if (result.state === false) {
-                        msg.reply(":x: Echec | Votre score est de " + result.pts.toFixed(2) + " | Multiplicateur actuel : " + result.multiplicator + "%");
+                antiSpam(user.id).then(rep => {
+                   console.log("Antispam", rep)
+                    if(rep === false){
+                        msg.reply("Le spam n'est pas autorisé. Un message toute les 2 secondes.\n10 secondes de santion sont ajoutée.")
                     }
                     else {
-                        msg.reply(":white_check_mark: Succès | Votre score est de " + result.pts.toFixed(2) + " | Multiplicateur actuel : " + result.multiplicator + "%");
+                        /** Looking for rune name param **/
+                        if (args[1]) {
+                            let rune = runes.get(args[1])
+                            if (Number.isInteger(rune)) {
+                                params = {rune: args[1], win: rune}
+                            }
+                        }
+                        let response = forgemaso.calc(params.win)
+                        updateUser(user, response, params.win).then(result => {
+                            stat(params.rune, result.state)
+                            if (result.state === false) {
+                                msg.reply(":x: Echec | Votre score est de " + result.pts.toFixed(2) + " | Multiplicateur actuel : " + result.multiplicator + "%");
+                            }
+                            else {
+                                msg.reply(":white_check_mark: Succès | Votre score est de " + result.pts.toFixed(2) + " | Multiplicateur actuel : " + result.multiplicator + "%");
+                            }
+                        })
                     }
-                })
-                break;
-            case 'fm.rules' :
+                });
+
                 break;
             case 'fm.help' :
                 //let embed = new Discord.RichEmbed()
@@ -243,6 +274,10 @@ client.on('message', msg => {
                             {
                                 "name": "Le multiplicateur de points",
                                 "value": "Il a pour valeur initial 100%, chaque rune passée multipliera votre nombre de points par le multiplicateur actuel.\n\nLe multiplicateur évolu selon les risques pris :\nA chaque tentative réussie, le multiplicateur augmentera selon la rune passée."
+                            },
+                            {
+                                "name" : "Statistiques",
+                                "value" : "Utilisé la commande ``!fm.stats`` pour obtenir les statistiques liées au bot :)"
                             }
                         ]
                     }
@@ -491,6 +526,46 @@ client.on('message', msg => {
                 }
                 msg.channel.send({
                     embed: resp
+                });
+                break;
+            case 'fm.stats' :
+                let stats = runesStats.get();
+                let r_stats = []
+                Object.keys(stats).map(function(objectKey) {
+                    let stat = stats[objectKey];
+                    if(stat.use != 0){
+                        r_stats.push({
+                            "name": "Rune " + objectKey + " ( 1/" + stat.pts + " soit **" + (100/stat.pts).toFixed(2) +"% ** théorique)",
+                            "value" : "Utilisée **" + stat.use + "** fois. **" + stat.win + "** ont été un succès. Soit **" + (stat.win * 100 / stat.use).toFixed(2) + "%** de succès"
+                        })
+                    }
+                    else {
+                        r_stats.push({
+                            "name": "Rune " + objectKey + " ( 1/" + stat.pts + " soit **" + (100/stat.pts).toFixed(2) +"% ** théorique)",
+                            "value" : "La rune n'a jamais été utilisée."
+                        })
+                    }
+
+                });
+
+
+
+
+                let resp_stats = {
+                    "title": "**STATISTIQUES**",
+                    "color": 7379760,
+                    "timestamp": new Date(),
+                    "footer": {
+                        "icon_url": "https://cdn.discordapp.com/app-icons/491856512562495488/70d660e95bf17533dceb3dcc805ea657.png?size=256",
+                        "text": "Forgemaso"
+                    },
+                    "fields": r_stats,
+                    "author": {
+                        "name": "Forgemaso"
+                    }
+                }
+                msg.channel.send({
+                    embed: resp_stats
                 });
                 break;
         }
