@@ -1,8 +1,8 @@
 {
   "pa": {
     "pts": 100,
-    "use": 257,
-    "fail": 257,
+    "use": 285,
+    "fail": 285,
     "win": 0
   },
   "pm": {
@@ -13,21 +13,21 @@
   },
   "po": {
     "pts": 51,
-    "use": 1,
-    "fail": 1,
-    "win": 0
+    "use": 10,
+    "fail": 9,
+    "win": 1
   },
   "invo": {
     "pts": 30,
-    "use": 0,
-    "fail": 0,
+    "use": 4,
+    "fail": 4,
     "win": 0
   },
   "do": {
     "pts": 20,
-    "use": 0,
-    "fail": 0,
-    "win": 0
+    "use": 15,
+    "fail": 14,
+    "win": 1
   },
   "crit": {
     "pts": 10,
@@ -49,8 +49,8 @@
   },
   "fo": {
     "pts": 2,
-    "use": 105,
-    "fail": 49,
-    "win": 56
+    "use": 114,
+    "fail": 55,
+    "win": 59
   }
 }

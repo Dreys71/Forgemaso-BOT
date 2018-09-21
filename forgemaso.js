@@ -6,3 +6,4 @@ exports.calc = function (win) {
         return false;
     }
 };
+
