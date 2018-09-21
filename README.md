@@ -13,6 +13,7 @@ Commands
 !fm.help
 !fm.stats
 !fm.runes
+!fm.me
 !fm.ladder
 !fm.gladder
 !fm.best
