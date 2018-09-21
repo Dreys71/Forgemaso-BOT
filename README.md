@@ -5,7 +5,6 @@ Commands
 ```diff
 :!fm
 :!fm <rune>
-:!fm <rune> <qty>
 
 <rune> : Optional, default : "pa"
 <qty> : Optional, default : 1 (min:1, max:100)
@@ -29,7 +28,7 @@ Le nombre de point obtenu pour un passage de rune est le logarythme base 2 de la
     -> Une rune avec une chance de 1 sur 50 rapportera  log2(50) => 5.64 points
     -> Une rune avec une chance de 1 sur 100 rapportera  log2(100) => 6.64 points
 
-    Le multiplicateur :
+    Le multiplicateur [TEMPORAIRE]:
 
     Il a pour valeur initial 100%, chaque succés de rune multiplie votre nombre de point par le multiplicateur actuel.
     Le multiplicateur évolu selon les risques pris :
