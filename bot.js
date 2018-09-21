@@ -18,7 +18,7 @@ client.on('ready', () => {
     console.log(`Logged in as ${client.user.tag}!`);
     client.user.setActivity('!fm.help', {type: 'WATCHING'})
 });
-
+/** call on !fm, save entry | params = user: {id, name}, bool, proba */
 async function updateUser(user, is_succeed, points){
     return new Promise(resolve => {
         db.get(`SELECT * FROM ladder WHERE user_id = ?`, [user.id], function (err, row) {
@@ -101,6 +101,99 @@ async function updateUser(user, is_succeed, points){
 
 }
 
+async function getUserCurrentStat(user, members) {
+    return new Promise(resolve => {
+        db.get('SELECT * FROM ladder, best WHERE ladder.user_id = ? AND ladder.user_id = best.user_id', [user.id], function (err, rep) {
+            if (err) {
+                console.log("getUserCurrentStat", err)
+            }
+            else {
+                if (rep != null) {
+                    async function getLadderServ() {
+                        return new Promise(resolve2 => {
+                            db.get("SELECT COUNT(*) as pos FROM ladder WHERE user_id IN (" + members + ") AND pts >= ?", [rep.pts], function (err, guildPos) {
+                                if(err){
+                                    console.log("getUserCurrentStart getLadderGuild", err)
+                                }
+                                else{
+                                    resolve2({"name" : "Position dans le ladder **courant** du serveur", "value" : "**" + guildPos.pos + "**"})
+                                }
+                            })
+                        })
+
+                    }
+                    async function getLadderServAbsolu() {
+                        return new Promise(resolve2 => {
+                            /** GET LADDER ABSOLU SERV **/
+                            db.get("SELECT count(*) as pos FROM ladder, best WHERE ladder.user_id IN (" + members + ") AND ladder.user_id = best.user_id AND max >= ?",[rep.max], function (err, guildPosA) {
+                                if(err){
+                                    console.log("getUserCurrentStat getLadderGA", err)
+                                }
+                                else {
+                                    resolve2({"name" : "Position dans le ladder **absolu** du serveur", "value" : "**" + guildPosA.pos + "**"})
+                                }
+                            })
+                        })
+
+                    }
+                    async function getLadderGlobal() {
+                        return new Promise(resolve2 => {
+                            /** GET LADDER COURANT ALL */
+                            db.get("SELECT count(*) as pos FROM ladder WHERE pts >= ?", [rep.pts], function (err, globalPos) {
+                                if(err){
+                                    console.log("getUserCurrentStart getLadderGuild", err)
+                                }
+                                else{
+                                    resolve2({"name" : "Position dans le ladder **courant** global", "value" : "**" + globalPos.pos + "**"})
+                                }
+                            })
+                        })
+
+                    }
+                    async function getLadderGlobalAbsolu() {
+                        return new Promise(resolve2 => {
+                            /** GET LADDER ABSOLU GLOBAL **/
+                            db.get("SELECT count(*) as pos FROM best WHERE max >= ?",[rep.max], function (err, globalPosA) {
+                                if(err){
+                                    console.log("getUserCurrentStat getLadderGA", err)
+                                }
+                                else {
+                                    resolve2({"name" : "Position dans le ladder **absolu** global", "value" : "**" + globalPosA.pos + "**"})
+                                }
+                            })
+                        })
+
+                    }
+                    let guRep = [
+                        {
+                            "name": "Score en cours",
+                            "value": "Votre score actuel est de **" + rep.pts + "**, votre multiplicateur est fixé à **" + rep.multiplicator + "%**"
+                        },
+                        {"name": "Score maximum", "value": "Votre meilleur score est de **" + rep.max + "** soit une proba théorique de **1/" + Math.ceil(Math.pow(2,rep.max)) + "**"}
+                    ]
+                    getLadderServ().then(json => {
+                        guRep.push(json)
+                        getLadderServAbsolu().then(json => {
+                            guRep.push(json)
+                            getLadderGlobal().then(json => {
+                                guRep.push(json)
+                                getLadderGlobalAbsolu().then(json => {
+                                    guRep.push(json)
+                                    resolve(guRep)
+                                });
+                            });
+                        });
+
+                    });
+                }
+                else {
+                    console.log([{"name": "Aucune information sur vous.", "value": "Vous devez joué au moins une fois pour être enregistré."}]);
+                }
+            }
+        })
+    })
+}
+/** Retourne le classement en cours de la guilde | params = [member.id,member.id,...].join() **/
 async function getGuildCurrent(str) {
     return new Promise(resolve => {
         db.all("SELECT * FROM ladder WHERE user_id IN (" + str + ") ORDER BY pts DESC LIMIT 100", function (err, row) {
@@ -114,6 +207,7 @@ async function getGuildCurrent(str) {
     })
 }
 
+/** Retourne le classement absolu de la guilde | params = [member.id,member.id,...].join() **/
 async function getGuildAllTime(str) {
     return new Promise(resolve => {
         db.all("SELECT * FROM ladder, best WHERE ladder.user_id IN (" + str + ") AND ladder.user_id = best.user_id ORDER BY max DESC LIMIT 100", function (err, row) {
@@ -127,6 +221,7 @@ async function getGuildAllTime(str) {
     })
 }
 
+/** Retourne le classement en cours tous serveur confondus **/
 async function getGlobalCurrent() {
     return new Promise(resolve => {
         db.all("SELECT * FROM ladder ORDER BY pts DESC LIMIT 100", function (err, row) {
@@ -140,6 +235,7 @@ async function getGlobalCurrent() {
     })
 }
 
+/** Retourne le classement absolu tous serveur confondus **/
 async function getGlobalAllTime() {
     return new Promise(resolve => {
         db.all("SELECT * FROM ladder, best WHERE ladder.user_id = best.user_id ORDER BY max DESC LIMIT 100", function (err, row) {
@@ -198,7 +294,7 @@ function stat(rune, state) {
 }
 
 client.on('message', msg => {
-    if (msg.content.substring(0, 1) === '!') {
+    if (msg.author.bot === false && msg.content.substring(0, 1) === '!') {
 
         let user = {id: msg.author.id, name: msg.author.username}
         let params = {rune: 'fo', win: 2}
@@ -265,8 +361,12 @@ client.on('message', msg => {
                                 "value": "Il y a 4 classements différents :\n``!fm.ladder`` Affiche le classement actuel du serveur discord\n``!fm.gladder`` Affiche le classement actuel global (TOP100)\n``!fm.best`` Affiche le classement absolu de votre serveur discord (Les meilleurs scores)\n``!fm.gbest`` Affiche le classement absolu global (TOP100)\n\nLa commande ``!fm.score`` vous affiche votre score actuel, votre multiplicateur ainsi que vos positions dans les différents ladder"
                             },
                             {
+                                "name" : "Mon score",
+                                "value" : "La commande ``!fm.me`` vous donne votre score en cours ainsi que votre classement dans les 4 ladders."
+                            },
+                            {
                                 "name": "Les points",
-                                "value": "Le nombre de point obtenu pour un passage de rune est le logarythme base 2 de la proba :\nUne rune 1/2 rapportera log2(2) => 1 point\nUne rune 1/4 rapportera  log2(4) => 2 points\nUne rune 1/8 rapportera  log2(8) => 3 points\nUne rune 1/16 rapportera  log2(16) => 4 points\nUne rune 1/32 rapportera  log2(32) => 5 points\nUne rune 1/50 rapportera  log2(50) => 5.64 points\nUne rune 1/100 rapportera  log2(100) => 6.64 points"
+                                "value": "Le nombre de point obtenu pour un passage de rune est le logarithme en base 2 de la proba :\nUne rune 1/2 rapportera log2(2) => 1 point\nUne rune 1/4 rapportera  log2(4) => 2 points\nUne rune 1/8 rapportera  log2(8) => 3 points\nUne rune 1/16 rapportera  log2(16) => 4 points\nUne rune 1/32 rapportera  log2(32) => 5 points\nUne rune 1/50 rapportera  log2(50) => 5.64 points\nUne rune 1/100 rapportera  log2(100) => 6.64 points"
                             },
                             {
                                 "name": "Le multiplicateur de points",
@@ -565,6 +665,30 @@ client.on('message', msg => {
                     embed: resp_stats
                 });
                 break;
+            case 'fm.me' :
+                let ids_members = [];
+                msg.guild.members.forEach(member => {
+                    ids_members.push(member.id)
+                });
+                getUserCurrentStat(user, ids_members.join()).then(function (stat) {
+                    let meRep = {
+                        "title": "**VOS INFORMATIONS**",
+                        "color": 7379760,
+                        "timestamp": new Date(),
+                        "footer": {
+                            "icon_url": "https://cdn.discordapp.com/app-icons/491856512562495488/70d660e95bf17533dceb3dcc805ea657.png?size=256",
+                            "text": "Forgemaso"
+                        },
+                        "fields": stat,
+                        "author": {
+                            "name": "Forgemaso"
+                        }
+                    }
+                    msg.channel.send({
+                        embed: meRep
+                    });
+                });
+                break
         }
     }
 });
