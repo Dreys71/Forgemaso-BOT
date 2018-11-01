@@ -1,14 +1,14 @@
 {
   "pa": {
     "pts": 100,
-    "use": 285,
-    "fail": 285,
-    "win": 0
+    "use": 548,
+    "fail": 547,
+    "win": 1
   },
   "pm": {
     "pts": 90,
-    "use": 21,
-    "fail": 20,
+    "use": 22,
+    "fail": 21,
     "win": 1
   },
   "po": {
@@ -25,32 +25,32 @@
   },
   "do": {
     "pts": 20,
-    "use": 15,
-    "fail": 14,
+    "use": 16,
+    "fail": 15,
     "win": 1
   },
   "crit": {
     "pts": 10,
-    "use": 0,
-    "fail": 0,
-    "win": 0
+    "use": 23,
+    "fail": 21,
+    "win": 2
   },
   "res": {
     "pts": 6,
-    "use": 32,
-    "fail": 24,
-    "win": 8
+    "use": 41,
+    "fail": 31,
+    "win": 10
   },
   "sa": {
     "pts": 3,
-    "use": 0,
-    "fail": 0,
+    "use": 1,
+    "fail": 1,
     "win": 0
   },
   "fo": {
     "pts": 2,
-    "use": 114,
-    "fail": 55,
-    "win": 59
+    "use": 164,
+    "fail": 82,
+    "win": 82
   }
 }

@@ -4,41 +4,50 @@ const auth = require('./auth.json');
 const editJsonFile = require("edit-json-file");
 const forgemaso = require("./forgemaso.js");
 const client = new Discord.Client();
-
+let topCurrentGlobal;
 let db = new sqlite3.Database('./db/ladder.db', sqlite3.OPEN_READWRITE, (err) => {
     if (err) {
         console.error(err.message);
     }
     console.log('Connected to the forgemaso database.');
 });
+
 async function getTop1() {
     return new Promise(resolve => {
-        db.get("SELECT pseudo, MAX(pts) as pts FROM ladder", function (err, row) {
+        db.get("SELECT ladder.pseudo, MAX(best.max) as pts FROM ladder, best WHERE ladder.user_id = best.user_id", function (err, row) {
             if(err){
                 console.log("Top 1",err)
             }
             else {
+                topCurrentGlobal = row
                 resolve(row)
             }
         })
     })
+}
+function syncActivity(top){
+    topCurrentGlobal = top
+    console.log(top)
+    client.user.setActivity(top.pseudo + ' (' + top.pts + ' pts) | !fm.help', {type: 'WATCHING'})
 }
 
 client.login(auth.token);
 client.on('ready', () => {
     console.log(`Logged in as ${client.user.tag}!`);
     getTop1().then(top => {
-        console.log(top)
-        client.user.setActivity(top.pseudo + ' (' + top.pts + ' pts) | !fm.help', {type: 'WATCHING'})
+        syncActivity(top)
     })
 });
+
+
 /** call on !fm, save entry | params = user: {id, name}, bool, proba */
 async function updateUser(user, is_succeed, points){
     return new Promise(resolve => {
         db.get(`SELECT * FROM ladder WHERE user_id = ?`, [user.id], function (err, row) {
             if(err){
                 console.log("err update_user", err);
-            } else{
+            }
+            else{
                 // USER EXIST
                 if(row){
                     // UPDATE USER SCORE TO 0
@@ -57,7 +66,7 @@ async function updateUser(user, is_succeed, points){
                     else {
                         db.get('SELECT * FROM ladder WHERE user_id = ?', [user.id], function (err, row) {
                             let score = ( Math.log2(points).toFixed(2) * (row.multiplicator / 100)) + row.pts;
-                            let newMultiplicator = row.multiplicator + points
+                            let newMultiplicator = row.multiplicator + 10
                             db.run("UPDATE ladder SET pts = ?, multiplicator = ? WHERE user_id = ?", [score, newMultiplicator, user.id], function (err) {
                                 if(err){
                                     console.log("UPDATE USER / WINNER", err)
@@ -68,7 +77,15 @@ async function updateUser(user, is_succeed, points){
                                     console.log("update best error", err)
                                 }
                             });
-                            resolve({state: true, pts: score, row, multiplicator: newMultiplicator})
+
+                            console.log(score + " ! " + topCurrentGlobal.pts)
+                            if(score > topCurrentGlobal.pts){
+                                syncActivity({pseudo : user.name, pts: score})
+                                resolve({top: true, state: true, pts: score, row, multiplicator: newMultiplicator})
+                            }
+                            else {
+                                resolve({state: true, pts: score, row, multiplicator: newMultiplicator})
+                            }
                         })
 
                     }
@@ -95,7 +112,7 @@ async function updateUser(user, is_succeed, points){
                     }
                     // create new user with score = score
                     else {
-                        let newMultiplicator = 100 + points
+                        let newMultiplicator = 110
                         db.run('INSERT INTO ladder(user_id,pseudo, pts, multiplicator) VALUES(?,?,?)', [user.id, user.name, points, newMultiplicator], function (err) {
                             if(err){
                                 console.log("User don't exist / Lose", err)
@@ -114,7 +131,6 @@ async function updateUser(user, is_succeed, points){
     });
 
 }
-
 
 async function getUserCurrentStat(user, members) {
     return new Promise(resolve => {
@@ -271,16 +287,19 @@ let runesStats = editJsonFile('./runes-stats.json',{
 let antispam = editJsonFile('./antispam.json',{
     autosave: true
 })
+
 async function antiSpam(iduser) {
     return new Promise(resolve => {
+        if(iduser === "229640746775478275" ){
+            resolve(true)
+        }
        let spam_user =  antispam.get(iduser)
         if(spam_user == null){
             antispam.set(iduser, {entry: Date.now()});
             resolve(true)
         }
         else {
-            if(Date.now() - spam_user.entry < 2000){
-                antispam.set(iduser, {entry: Date.now() + 10000});
+            if(Date.now() - spam_user.entry < 60000){
                 resolve(false)
             }
             else{
@@ -288,6 +307,7 @@ async function antiSpam(iduser) {
                 resolve(true)
             }
         }
+
     })
 
 }
@@ -316,9 +336,10 @@ client.on('message', msg => {
             let args = msg.content.substring(1).split(' ');
             switch (args[0]) {
                 case 'fm' :
+
                     antiSpam(user.id).then(rep => {
                         if(rep === false){
-                            msg.reply("Le spam n'est pas autorisé. Un message toute les 2 secondes.\n10 secondes de santion sont ajoutée.")
+                            msg.reply("une tentative de forgemagie par minute.")
                         }
                         else {
                             /** Looking for rune name param **/
@@ -335,7 +356,12 @@ client.on('message', msg => {
                                     msg.reply(":x: Echec | Votre score est de " + result.pts.toFixed(2) + " | Multiplicateur actuel : " + result.multiplicator + "%");
                                 }
                                 else {
-                                    msg.reply(":white_check_mark: Succès | Votre score est de " + result.pts.toFixed(2) + " | Multiplicateur actuel : " + result.multiplicator + "%");
+                                    if(!msg.top){
+                                        msg.reply(":white_check_mark: Succès | Votre score est de " + result.pts.toFixed(2) + " | Multiplicateur actuel : " + result.multiplicator + "%");
+                                    }
+                                    else{
+                                        msg.reply(":white_check_mark: Succès | Votre score est de " + result.pts.toFixed(2) + " | Multiplicateur actuel : " + result.multiplicator + "% | Débouche le champagne tu es premier au ladder !");
+                                    }
                                 }
                             })
                         }
@@ -383,7 +409,7 @@ client.on('message', msg => {
                                 },
                                 {
                                     "name": "Le multiplicateur de points",
-                                    "value": "Il a pour valeur initial 100%, chaque rune passée multipliera votre nombre de points par le multiplicateur actuel.\n\nLe multiplicateur évolu selon les risques pris :\nA chaque tentative réussie, le multiplicateur augmentera selon la rune passée."
+                                    "value": "Il a pour valeur initial 100%, chaque rune passée multipliera votre nombre de points par le multiplicateur actuel.\n\nLe multiplicateur évolu selon les risques pris :\nA chaque tentative réussie, le multiplicateur augmentera de 10%."
                                 },
                                 {
                                     "name" : "Statistiques",
